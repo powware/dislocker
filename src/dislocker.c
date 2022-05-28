@@ -279,7 +279,7 @@ extern int verbosity;
 
 int dislock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 {
-	verbosity = L_DEBUG;
+	// verbosity = L_DEBUG;
 
 	uint8_t* buf = NULL;
 

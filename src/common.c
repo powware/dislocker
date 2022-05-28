@@ -55,6 +55,10 @@ off_t lseek_offset = 0;
 int dis_open(const char* file, int flags)
 {
 	int fd = GetHookDataIndex((EFI_BLOCK_IO_PROTOCOL *)file);
+	if(fd < 0)
+	{
+		exit(1);
+	}
 
 	lseek_offset = 0;
 

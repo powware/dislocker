@@ -30,7 +30,7 @@
 
 #include <sys/ioctl.h>
 
-#define BLKSSZGET  _IO(0x12,104)/* get block device sector size */
+#define BLKSSZGET  0
 
 /*
  * On Darwin and FreeBSD, files are opened using 64 bits offsets/variables
@@ -136,7 +136,6 @@ dis_metadata_t dis_metadata_get(dis_context_t dis_ctx)
 	return dis_ctx->metadata;
 }
 
-
 int dis_metadata_initialize(dis_metadata_t dis_meta)
 {
 	if(!dis_meta)
@@ -164,6 +163,8 @@ int dis_metadata_initialize(dis_metadata_t dis_meta)
 		return DIS_RET_ERROR_VOLUME_HEADER_READ;
 	}
 
+
+
 	//Windows 10 1903 exFAT
 	if (!dis_meta->volume_header->sector_size) {
 		uint64_t nSectorSize = 0;
@@ -186,6 +187,8 @@ int dis_metadata_initialize(dis_metadata_t dis_meta)
 		dis_printf(L_CRITICAL, "Cannot parse volume header. Abort.\n");
 		return DIS_RET_ERROR_VOLUME_HEADER_CHECK;
 	}
+
+
 
 	checkupdate_dis_meta_state(dis_meta_cfg, DIS_STATE_AFTER_VOLUME_CHECK);
 
@@ -240,7 +243,7 @@ int dis_metadata_initialize(dis_metadata_t dis_meta)
 		dis_printf(
 			L_CRITICAL,
 			"Program designed only for BitLocker version 2 and less, "
-			"the version here is %hd. Abort.\n",
+			"the version here is %u. Abort.\n",
 			information->version
 		);
 		return DIS_RET_ERROR_METADATA_VERSION_UNSUPPORTED;
@@ -517,8 +520,7 @@ static int begin_compute_regions(volume_header_t* vh,
 		uint64_t new_offset = vh->metadata_lcn * vh->sectors_per_cluster * vh->sector_size;
 		dis_printf(
 			L_DEBUG,
-			"Changing first metadata offset from %#" PRIx64
-			" to %#" PRIx64 "\n",
+			"Changing first metadata offset from %lu to %lu\n",
 			vh->information_off[0],
 			new_offset
 		);
@@ -592,7 +594,7 @@ static int end_compute_regions(dis_metadata_t dis_meta)
 	}
 
 
-	dis_printf(L_DEBUG, "Metadata files size: %#" PRIx64 "\n", metafiles_size);
+	dis_printf(L_DEBUG, "Metadata files size: %lu" PRIx64 "\n", metafiles_size);
 
 	/*
 	 * The first 3 regions are for INFORMATION metadata, they have the same size
@@ -648,7 +650,7 @@ static int end_compute_regions(dis_metadata_t dis_meta)
 
 		dis_printf(
 			L_DEBUG,
-			"Virtualized info size: %#" F_OFF_T "\n",
+			"Virtualized info size: %lu" F_OFF_T "\n",
 			dis_meta->virtualized_size
 		);
 
@@ -693,7 +695,7 @@ static int get_metadata(off_t source, void **metadata, int fd)
 	// Go to the beginning of the BitLocker header
 	dis_lseek(fd, source, SEEK_SET);
 
-	dis_printf(L_DEBUG, "Reading bitlocker header at %#" F_OFF_T "...\n", source);
+	dis_printf(L_DEBUG, "Reading bitlocker header at %u...\n", source);
 
 	bitlocker_information_t information;
 
@@ -776,7 +778,7 @@ static int get_dataset(void* metadata, bitlocker_dataset_t** dataset)
 		|| (*dataset)->copy_size - (*dataset)->header_size < 8
 	)
 	{
-		dis_printf(L_DEBUG, "size=%#x, copy_size=%#x, header_size=%#x\n");
+		dis_printf(L_DEBUG, "size=%lux, copy_size=%lux, header_size=%lux\n");
 		return FALSE;
 	}
 
@@ -801,7 +803,7 @@ static int get_eow_information(off_t source, void** eow_infos, int fd)
 	/* Go to the beginning of the EOW Information header */
 	dis_lseek(fd, source, SEEK_SET);
 
-	dis_printf(L_DEBUG, "Reading EOW Information header at %#" F_OFF_T "...\n",
+	dis_printf(L_DEBUG, "Reading EOW Information header at %lu" F_OFF_T "...\n",
 	        source);
 
 	bitlocker_eow_infos_t eow_infos_hdr;
@@ -930,7 +932,7 @@ static int get_metadata_lazy_checked(
 
 		dis_printf(
 			L_DEBUG,
-			"Reading validations data at offset %#" PRIx64 ".\n",
+			"Reading validations data at offset %lu" PRIx64 ".\n",
 			validations_offset
 		);
 
@@ -961,7 +963,7 @@ static int get_metadata_lazy_checked(
 		 * this provides a better checksum (sha256 hash)
 		 *  => This needs the VMK (decrypted)
 		 */
-		dis_printf(L_DEBUG, "Looking if %#x == %#x for metadata validation\n",
+		dis_printf(L_DEBUG, "Looking if %lux == %lux for metadata validation\n",
 		        metadata_crc32, validations.crc32);
 
 		++current;
@@ -1045,7 +1047,7 @@ static int get_eow_check_valid(
 		eow_infos_size = eow_infos_hdr->infos_size;
 		computed_crc32 = crc32((unsigned char*)*eow_infos, eow_infos_size);
 
-		dis_printf(L_DEBUG, "Looking if %#x == %#x for EOW information validation\n",
+		dis_printf(L_DEBUG, "Looking if %lux == %lux for EOW information validation\n",
 		        computed_crc32, eow_infos_hdr->crc32);
 
 		if(computed_crc32 == eow_infos_hdr->crc32)
@@ -1141,7 +1143,7 @@ void dis_metadata_vista_vbr_fve2ntfs(dis_metadata_t dis_meta, void* vbr)
 	dis_printf(
 		L_DEBUG,
 		"  Fixing sector (Vista): replacing signature "
-		"and MFTMirror field by: %#" PRIx64 "\n",
+		"and MFTMirror field by: %lu" PRIx64 "\n",
 		dis_meta->volume_header->mft_mirror
 	);
 
@@ -1179,7 +1181,7 @@ void dis_metadata_vista_vbr_ntfs2fve(dis_metadata_t dis_meta, void* vbr)
 	dis_printf(
 		L_DEBUG,
 		"  Fixing sector (Vista): replacing signature "
-		"and MFTMirror field by: %#" PRIx64 "\n",
+		"and MFTMirror field by: %lu" PRIx64 "\n",
 		volume_header->metadata_lcn
 	);
 }
@@ -1206,7 +1208,7 @@ int dis_metadata_is_overwritten(
 		if(offset >= metadata_offset &&
 		   offset < metadata_offset + metadata_size)
 		{
-			dis_printf(L_DEBUG, "In metadata file (1:%#"
+			dis_printf(L_DEBUG, "In metadata file (1:%lu"
 			        F_OFF_T ")\n", offset);
 			return DIS_RET_ERROR_METADATA_FILE_OVERWRITE;
 		}
@@ -1214,8 +1216,8 @@ int dis_metadata_is_overwritten(
 		if(offset < metadata_offset &&
 		   offset + (off_t)size > metadata_offset)
 		{
-			dis_printf(L_DEBUG, "In metadata file (2:%#"
-			        F_OFF_T "+ %#" F_SIZE_T ")\n", offset, size);
+			dis_printf(L_DEBUG, "In metadata file (2:%lu"
+			        F_OFF_T "+ %lu" F_SIZE_T ")\n", offset, size);
 			return DIS_RET_ERROR_METADATA_FILE_OVERWRITE;
 		}
 	}

@@ -42,7 +42,7 @@ void* dis_malloc(size_t size)
 	}
 	void* p = malloc(size);
 
-	dis_printf(L_DEBUG, "New memory allocation at %p (%#zx bytes allocated)\n", p, size);
+	dis_printf(L_DEBUG, "New memory allocation at %p (%lu bytes allocated)\n", p, size);
 
 	if(p == NULL)
 	{

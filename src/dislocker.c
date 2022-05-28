@@ -275,9 +275,12 @@ int dis_initialize(dis_context_t dis_ctx)
 
 
 
+extern int verbosity;
 
 int dislock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 {
+	verbosity = L_DEBUG;
+
 	uint8_t* buf = NULL;
 
 	size_t sector_count;
@@ -313,7 +316,7 @@ int dislock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 
 	if(size > INT_MAX)
 	{
-		dis_printf(L_ERROR, "Received size which will overflow: %#" F_SIZE_T "\n",
+		dis_printf(L_ERROR, "Received size which will overflow: %lu" F_SIZE_T "\n",
 			size
 		);
 		return -EOVERFLOW;
@@ -322,7 +325,7 @@ int dislock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 	/* Check requested offset */
 	if(offset < 0)
 	{
-		dis_printf(L_ERROR, "Offset under 0: %#" F_OFF_T "\n", offset);
+		dis_printf(L_ERROR, "Offset under 0: %lu" F_OFF_T "\n", offset);
 		return -EFAULT;
 	}
 
@@ -330,7 +333,7 @@ int dislock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 	{
 		dis_printf(
 			L_ERROR,
-			"Offset (%#" F_OFF_T ") exceeds volume's size (%#" F_OFF_T ")\n",
+			"Offset (%lu" F_OFF_T ") exceeds volume's size (%lu" F_OFF_T ")\n",
 			offset,
 			(off_t)dis_ctx->io_data.volume_size
 		);
@@ -372,10 +375,9 @@ int dislock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 
 	dis_printf(L_DEBUG,
 	        "--------------------{ Fuse reading }-----------------------\n");
-	dis_printf(L_DEBUG, "  Offset and size needed: %#" F_OFF_T
-	                 " and %#" F_SIZE_T "\n", offset, size);
-	dis_printf(L_DEBUG, "  Start sector number: %#" F_OFF_T
-	                 " || Number of sectors: %#" F_SIZE_T "\n",
+	dis_printf(L_DEBUG, "  Offset and size needed: %lu and %lu \n", offset, size);
+	dis_printf(L_DEBUG, "  Start sector number: %lu" F_OFF_T
+	                 " || Number of sectors: %lu" F_SIZE_T "\n",
 	                 sector_start, sector_count);
 
 
@@ -385,7 +387,7 @@ int dislock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 	 */
 
 	size_t to_allocate = size + sector_to_add*sector_size;
-	dis_printf(L_DEBUG, "  Trying to allocate %#" F_SIZE_T " bytes\n",to_allocate);
+	dis_printf(L_DEBUG, "  Trying to allocate %lu" F_SIZE_T " bytes\n",to_allocate);
 	buf = malloc(to_allocate);
 
 	/* If buffer could not be allocated, return an error */
@@ -473,7 +475,7 @@ int enlock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 
 	if(size > INT_MAX)
 	{
-		dis_printf(L_ERROR, "Received size which will overflow: %#" F_SIZE_T "\n",
+		dis_printf(L_ERROR, "Received size which will overflow: %lu" F_SIZE_T "\n",
 			size
 		);
 		return -EOVERFLOW;
@@ -481,13 +483,13 @@ int enlock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 
 	if(offset < 0)
 	{
-		dis_printf(L_ERROR, "Offset under 0: %#" F_OFF_T "\n", offset);
+		dis_printf(L_ERROR, "Offset under 0: %lu" F_OFF_T "\n", offset);
 		return -EFAULT;
 	}
 
 	if(offset >= (off_t)dis_ctx->io_data.volume_size)
 	{
-		dis_printf(L_ERROR, "Offset (%#" F_OFF_T ") exceeds volume's size (%#"
+		dis_printf(L_ERROR, "Offset (%lu" F_OFF_T ") exceeds volume's size (%lu"
 		                 F_OFF_T ")\n",
 		        offset, (off_t)dis_ctx->io_data.volume_size);
 		return -EFAULT;
@@ -499,9 +501,9 @@ int enlock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 		               - (size_t)offset;
 		dis_printf(
 			L_WARNING,
-			"Size modified as exceeding volume's end (offset=%#"
-			F_OFF_T " + size=%#" F_OFF_T " >= volume_size=%#"
-			F_OFF_T ") ; new size: %#" F_SIZE_T "\n",
+			"Size modified as exceeding volume's end (offset=%lu"
+			F_OFF_T " + size=%lu" F_OFF_T " >= volume_size=%lu"
+			F_OFF_T ") ; new size: %lu" F_SIZE_T "\n",
 			offset, (off_t)size, dis_ctx->io_data.volume_size, nsize
 		);
 		size = nsize;
@@ -531,7 +533,7 @@ int enlock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 			 * the offset
 			 */
 			offset = offset + (off_t)dis_ctx->metadata->information->boot_sectors_backup;
-			dis_printf(L_DEBUG, "  `-> Just redirecting to %#"F_OFF_T"\n", offset);
+			dis_printf(L_DEBUG, "  `-> Just redirecting to %lu"F_OFF_T"\n", offset);
 		}
 		else
 		{
@@ -594,10 +596,10 @@ int enlock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 
 	dis_printf(L_DEBUG,
 	        "--------------------{ Fuse writing }-----------------------\n");
-	dis_printf(L_DEBUG, "  Offset and size requested: %#" F_OFF_T " and %#"
+	dis_printf(L_DEBUG, "  Offset and size requested: %lu" F_OFF_T " and %lu"
 	        F_SIZE_T "\n", offset, size);
-	dis_printf(L_DEBUG, "  Start sector number: %#" F_OFF_T
-	        " || Number of sectors: %#" F_SIZE_T "\n",
+	dis_printf(L_DEBUG, "  Start sector number: %lu" F_OFF_T
+	        " || Number of sectors: %lu" F_SIZE_T "\n",
 	        sector_start, sector_count);
 
 

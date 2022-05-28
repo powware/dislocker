@@ -166,7 +166,7 @@ int get_vmk(datum_aes_ccm_t* vmk_datum, uint8_t* recovery_key, size_t key_size,
 	{
 		dis_printf(
 			L_ERROR,
-			"Recovery key size too big, unsupported: %#" F_SIZE_T "\n",
+			"Recovery key size too big, unsupported: %lu\n",
 			key_size
 		);
 		return FALSE;

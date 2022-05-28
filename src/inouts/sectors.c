@@ -113,7 +113,7 @@ int read_decrypt_sectors(
 	size_t   nb_loop = 0;
 	size_t   size    = nb_read_sector * sector_size;
 	uint8_t* input   = malloc(size);
-	off_t    off     = sector_start + io_data->part_off;
+	off_t    off     = sector_start;// + io_data->part_off;
 
 	memset(input , 0, size);
 	memset(output, 0, size);
@@ -126,7 +126,7 @@ int read_decrypt_sectors(
 		free(input);
 		dis_printf(
 			L_ERROR,
-			"Unable to read %#" F_SIZE_T " bytes from %#" F_OFF_T "\n",
+			"Unable to read %lu bytes from %lu\n",
 			size,
 			off
 		);
@@ -405,7 +405,7 @@ static void* thread_decrypt(void* params)
 				offset,
 				loop_output
 			))
-				dis_printf(L_CRITICAL, "Decryption of sector %#" F_OFF_T
+				dis_printf(L_CRITICAL, "Decryption of sector %lu" F_OFF_T
 				                    " failed!\n", offset);
 		}
 	}
@@ -485,7 +485,7 @@ static void* thread_encrypt(void* params)
 				offset,
 				loop_output
 			))
-				dis_printf(L_CRITICAL, "Encryption of sector %#" F_OFF_T
+				dis_printf(L_CRITICAL, "Encryption of sector %lu" F_OFF_T
 				                    " failed!\n", offset);
 		}
 	}
@@ -528,7 +528,7 @@ static void fix_read_sector_seven(
 	off_t from = sector_address;
 	off_t to   = from + (off_t)io_data->backup_sectors_addr;
 
-	dis_printf(L_DEBUG, "  Fixing sector (7): from %#" F_OFF_T " to %#" F_OFF_T
+	dis_printf(L_DEBUG, "  Fixing sector (7): from %lu" F_OFF_T " to %lu" F_OFF_T
 	                 "\n", from, to);
 
 	to += io_data->part_off;
@@ -540,7 +540,7 @@ static void fix_read_sector_seven(
 	{
 		dis_printf(
 			L_ERROR,
-			"Unable to read %#" F_SIZE_T " bytes from %#" F_OFF_T "\n",
+			"Unable to read %lu" F_SIZE_T " bytes from %lu" F_OFF_T "\n",
 			io_data->sector_size,
 			to
 		);

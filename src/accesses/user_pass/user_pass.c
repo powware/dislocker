@@ -228,7 +228,7 @@ static ssize_t my_getpass(char **lineptr, FILE *stream)
 
 	dis_printf(
 		L_DEBUG,
-		"New memory allocation at %p (%#" F_SIZE_T " byte allocated)\n",
+		"New memory allocation at %p (%lu" F_SIZE_T " byte allocated)\n",
 		(void*) *lineptr,
 		n
 	);

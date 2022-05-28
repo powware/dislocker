@@ -383,11 +383,11 @@ int intermediate_key(const uint8_t *recovery_password,
 	iresult = iresult_save;
 
 	/* Just print it */
-	char s[NB_RP_BLOCS*2 * 5 + 1] = {0,};
-	for (loop = 0; loop < NB_RP_BLOCS*2; ++loop)
-		snprintf(&s[loop*5], 6, "0x%02hhx ", iresult[loop]);
+	// char s[NB_RP_BLOCS*2 * 5 + 1] = {0,};
+	// for (loop = 0; loop < NB_RP_BLOCS*2; ++loop)
+	// 	snprintf(&s[loop*5], 6, "0x%02hhx ", iresult[loop]);
 
-	dis_printf(L_DEBUG, "Distilled password: '%s\b'\n", s);
+	// dis_printf(L_DEBUG, "Distilled password: '%s\b'\n", s);
 
 	stretch_recovery_key(iresult, salt, result_key);
 
@@ -404,171 +404,171 @@ int intermediate_key(const uint8_t *recovery_password,
  * @param rp The place where to put the entered recovery password
  * @return TRUE if rp can be trusted, FALSE otherwise
  */
-int prompt_rp(uint8_t** rp)
+int prompt_rp(uint8_t** )
 {
 	// Check the parameter
-	if(!rp)
-		return FALSE;
+	// if(!rp)
+	// 	return FALSE;
 
 
-	int in       = get_input_fd();
+	// int in       = get_input_fd();
 
-	char* prompt = "\rEnter the recovery password: ";
+	// char* prompt = "\rEnter the recovery password: ";
 
-	int idx      = 0;
-	uint8_t c    = 0;
-	int block_nb = 1;
-	uint8_t digits[NB_DIGIT_BLOC + 1] = {0,};
+	// int idx      = 0;
+	// uint8_t c    = 0;
+	// int block_nb = 1;
+	// uint8_t digits[NB_DIGIT_BLOC + 1] = {0,};
 
-	uint8_t* blah = NULL;
+	// uint8_t* blah = NULL;
 
-	fd_set rfds;
-	int    nfds = in + 1;
+	// fd_set rfds;
+	// int    nfds = in + 1;
 
-	if(in < 0)
-	{
-		fprintf(stderr, "Cannot open tty.\n");
-		return FALSE;
-	}
+	// if(in < 0)
+	// {
+	// 	fprintf(stderr, "Cannot open tty.\n");
+	// 	return FALSE;
+	// }
 
-	if(FD_SETSIZE < 0)
-	{
-		fprintf(stderr, "Cannot add fd in the set.\n");
-		return FALSE;
-	}
+	// if(FD_SETSIZE < 0)
+	// {
+	// 	fprintf(stderr, "Cannot add fd in the set.\n");
+	// 	return FALSE;
+	// }
 
-	if((unsigned) in >= (unsigned) FD_SETSIZE)
-	{
-		fprintf(stderr,
-		        "Terminal file descriptor (%u) is equal to or larger than "
-		        "FD_SETSIZE (%u).\n", (unsigned) in, (unsigned) FD_SETSIZE);
-		close_input_fd();
-		return FALSE;
-	}
-
-
-	/* 8 = 7 hyphens separating the blocks + 1 '\0' at the end of the string */
-	*rp = malloc(NB_RP_BLOCS * NB_DIGIT_BLOC + 8);
-	memset(*rp, 0, NB_RP_BLOCS * NB_DIGIT_BLOC + 8);
-
-	blah = *rp;
-
-	printf("%s", prompt);
-	fflush(NULL);
-
-	FD_ZERO(&rfds);
-	/** @see xstd/xsys_select.h for an explanation of this macro */
-	DIS_FD_SET(in, &rfds);
-
-	while(1)
-	{
-		/* Wait for inputs */
-		int selret = select(nfds+1, &rfds, NULL, NULL, NULL);
-
-		/* Look for errors */
-		if(selret == -1)
-		{
-			fprintf(stderr, "Error %d in select: %s\n", errno, strerror(errno));
-			break;
-		}
+	// if((unsigned) in >= (unsigned) FD_SETSIZE)
+	// {
+	// 	fprintf(stderr,
+	// 	        "Terminal file descriptor (%u) is equal to or larger than "
+	// 	        "FD_SETSIZE (%u).\n", (unsigned) in, (unsigned) FD_SETSIZE);
+	// 	close_input_fd();
+	// 	return FALSE;
+	// }
 
 
-		if(read(in, &c, 1) <= 0)
-		{
-			fprintf(
-				stderr,
-				"Something is available for reading but unable to "
-				"read (%d): %s\n",
-				errno,
-				strerror(errno)
-			);
-			break;
-		}
+	// /* 8 = 7 hyphens separating the blocks + 1 '\0' at the end of the string */
+	// *rp = malloc(NB_RP_BLOCS * NB_DIGIT_BLOC + 8);
+	// memset(*rp, 0, NB_RP_BLOCS * NB_DIGIT_BLOC + 8);
 
-		/* If this is an hyphen, just ignore it */
-		if(c == '-')
-			continue;
+	// blah = *rp;
 
-		/* Place the character at the right place or erase the last character */
-		if(idx <= NB_DIGIT_BLOC)
-		{
-			/* If backspace was hit */
-			if(c == '\b' || c == '\x7f')
-			{
-				idx--;
+	// printf("%s", prompt);
+	// fflush(NULL);
 
-				if(idx < 0 && block_nb > 1)
-				{
-					blah -= (NB_DIGIT_BLOC + 1);
-					snprintf((char*)digits, NB_DIGIT_BLOC, "%s", blah);
-					*blah = '\0';
-					idx   =  NB_DIGIT_BLOC - 1;
-					block_nb--;
-				}
+	// FD_ZERO(&rfds);
+	// /** @see xstd/xsys_select.h for an explanation of this macro */
+	// DIS_FD_SET(in, &rfds);
 
-				if(idx < 0)
-					idx = 0;
+	// while(1)
+	// {
+	// 	/* Wait for inputs */
+	// 	int selret = select(nfds+1, &rfds, NULL, NULL, NULL);
 
-				/* Yeah, I agree, this is kinda dirty */
-				digits[idx] = ' ';
-				printf("%s%s%s", prompt, *rp, digits);
+	// 	/* Look for errors */
+	// 	if(selret == -1)
+	// 	{
+	// 		fprintf(stderr, "Error %d in select: %s\n", errno, strerror(errno));
+	// 		break;
+	// 	}
 
-				digits[idx] = '\0';
-				idx--;
-			}
-			else if(c >= '0' && c <= '9')
-				digits[idx] = (uint8_t)c;
-			else
-				continue;
-		}
 
-		printf("%s%s%s", prompt, *rp, digits);
-		fflush(NULL);
-		idx++;
+	// 	if(read(in, &c, 1) <= 0)
+	// 	{
+	// 		fprintf(
+	// 			stderr,
+	// 			"Something is available for reading but unable to "
+	// 			"read (%d): %s\n",
+	// 			errno,
+	// 			strerror(errno)
+	// 		);
+	// 		break;
+	// 	}
 
-		/* Now if we're at the end of a block, (in)validate it */
-		if(idx >= NB_DIGIT_BLOC)
-		{
-			if(valid_block(digits, block_nb, NULL))
-			{
-				snprintf((char*)blah, NB_DIGIT_BLOC+1, "%s", digits);
-				blah += NB_DIGIT_BLOC;
+	// 	/* If this is an hyphen, just ignore it */
+	// 	if(c == '-')
+	// 		continue;
 
-				if(block_nb >= NB_RP_BLOCS)
-				{
-					/* Hide the recovery password for sneaky eyes */
-					printf(
-						"%1$s%2$s-%2$s-%2$s-%2$s-%2$s-%2$s-%2$s-%2$s\n",
-						prompt,
-						"XXXXXX"
-					);
-					printf("Valid password format, continuing.\n");
-					close_input_fd();
-					return TRUE;
-				}
-				else
-				{
-					putchar('-');
-					*blah = '-';
-					blah++;
-				}
+	// 	/* Place the character at the right place or erase the last character */
+	// 	if(idx <= NB_DIGIT_BLOC)
+	// 	{
+	// 		/* If backspace was hit */
+	// 		if(c == '\b' || c == '\x7f')
+	// 		{
+	// 			idx--;
 
-				block_nb++;
-			}
-			else
-			{
-				fprintf(stderr, "\nInvalid block.\n");
-				printf("%s%s", prompt, *rp);
-			}
+	// 			if(idx < 0 && block_nb > 1)
+	// 			{
+	// 				blah -= (NB_DIGIT_BLOC + 1);
+	// 				snprintf((char*)digits, NB_DIGIT_BLOC, "%s", blah);
+	// 				*blah = '\0';
+	// 				idx   =  NB_DIGIT_BLOC - 1;
+	// 				block_nb--;
+	// 			}
 
-			fflush(NULL);
+	// 			if(idx < 0)
+	// 				idx = 0;
 
-			idx = 0;
-			memset(digits, 0, NB_DIGIT_BLOC);
-		}
-	}
+	// 			/* Yeah, I agree, this is kinda dirty */
+	// 			digits[idx] = ' ';
+	// 			printf("%s%s%s", prompt, *rp, digits);
 
-	close_input_fd();
+	// 			digits[idx] = '\0';
+	// 			idx--;
+	// 		}
+	// 		else if(c >= '0' && c <= '9')
+	// 			digits[idx] = (uint8_t)c;
+	// 		else
+	// 			continue;
+	// 	}
+
+	// 	printf("%s%s%s", prompt, *rp, digits);
+	// 	fflush(NULL);
+	// 	idx++;
+
+	// 	/* Now if we're at the end of a block, (in)validate it */
+	// 	if(idx >= NB_DIGIT_BLOC)
+	// 	{
+	// 		if(valid_block(digits, block_nb, NULL))
+	// 		{
+	// 			snprintf((char*)blah, NB_DIGIT_BLOC+1, "%s", digits);
+	// 			blah += NB_DIGIT_BLOC;
+
+	// 			if(block_nb >= NB_RP_BLOCS)
+	// 			{
+	// 				/* Hide the recovery password for sneaky eyes */
+	// 				printf(
+	// 					"%1$s%2$s-%2$s-%2$s-%2$s-%2$s-%2$s-%2$s-%2$s\n",
+	// 					prompt,
+	// 					"XXXXXX"
+	// 				);
+	// 				printf("Valid password format, continuing.\n");
+	// 				close_input_fd();
+	// 				return TRUE;
+	// 			}
+	// 			else
+	// 			{
+	// 				putchar('-');
+	// 				*blah = '-';
+	// 				blah++;
+	// 			}
+
+	// 			block_nb++;
+	// 		}
+	// 		else
+	// 		{
+	// 			fprintf(stderr, "\nInvalid block.\n");
+	// 			printf("%s%s", prompt, *rp);
+	// 		}
+
+	// 		fflush(NULL);
+
+	// 		idx = 0;
+	// 		memset(digits, 0, NB_DIGIT_BLOC);
+	// 	}
+	// }
+
+	// close_input_fd();
 	return FALSE;
 }
 

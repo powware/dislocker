@@ -32,7 +32,7 @@
 
 
 
-
+#ifndef UEFI_DRIVER
 /**
  * Hide a commandline option, replacing the actual optarg by 'X's.
  *
@@ -211,7 +211,7 @@ PROGNAME " by " AUTHOR ", v" VERSION " (compiled for " __OS "/" __ARCH ")\n"
  * @param dis_ctx Dislocker's context
  * @param optstr The value passed with the --options parameter
  */
-static void parse_options(dis_context_t dis_ctx, char* optstr)
+static void parse_options(dis_context_t, char*)
 {
 	char* tok = NULL;
 	size_t nb_options = sizeof(dis_opt)/sizeof(struct _dis_options);
@@ -515,7 +515,7 @@ int dis_getopt(dis_context_t dis_ctx, dis_opt_e opt_name, void** opt_value)
 
 	return TRUE;
 }
-
+#endif // UEFI_DRIVER
 
 static void set_decryption_mean(dis_config_t* cfg, int set, unsigned value)
 {

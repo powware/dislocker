@@ -101,7 +101,7 @@ int get_fvek(dis_metadata_t dis_meta, void* vmk_datum, void** fvek_datum)
 	{
 		dis_printf(
 			L_ERROR,
-			"VMK size too big, unsupported: %#" F_SIZE_T "\n",
+			"VMK size too big, unsupported: %lu\n",
 			vmk_key_size
 		);
 		return FALSE;
@@ -151,84 +151,84 @@ int get_fvek(dis_metadata_t dis_meta, void* vmk_datum, void** fvek_datum)
  * @param fvek_datum The FVEK datum KEY structure
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int build_fvek_from_file(dis_config_t* cfg, void** fvek_datum)
+int build_fvek_from_file(dis_config_t*, void**)
 {
-	if(!cfg)
-		return FALSE;
+	// if(!cfg)
+	// 	return FALSE;
 
 
-	off_t actual_size   = -1;
-	int   file_fd = -1;
-	datum_key_t* datum_key = NULL;
-	ssize_t rs;
+	// off_t actual_size   = -1;
+	// int   file_fd = -1;
+	// datum_key_t* datum_key = NULL;
+	// ssize_t rs;
 
-	union {
-		cipher_t single;
-		char multi[2];
-	} enc_method;
+	// union {
+	// 	cipher_t single;
+	// 	char multi[2];
+	// } enc_method;
 
-	memset(enc_method.multi, 0, 2);
-	char fvek_keys[64] = {0,};
+	// memset(enc_method.multi, 0, 2);
+	// char fvek_keys[64] = {0,};
 
-	off_t expected_size = sizeof(enc_method) + sizeof(fvek_keys);
-
-
-	file_fd = dis_open(cfg->fvek_file, O_RDONLY);
-	if(file_fd == -1)
-	{
-		dis_printf(L_ERROR, "Cannot open FVEK file (%s)\n", cfg->fvek_file);
-		return FALSE;
-	}
-
-	/* Check the file's size */
-	actual_size = dis_lseek(file_fd, 0, SEEK_END);
-
-	if(actual_size != expected_size)
-	{
-		dis_printf(
-			L_ERROR,
-			"Wrong FVEK file size, expected %d but has %d\n",
-			expected_size,
-			actual_size
-		);
-		return FALSE;
-	}
-
-	/* Read everything */
-	dis_lseek(file_fd, 0, SEEK_SET);
-	rs = dis_read(file_fd, enc_method.multi, sizeof(enc_method));
-	if(rs != sizeof(enc_method))
-	{
-		dis_printf(
-			L_ERROR,
-			"Cannot read whole encryption method in the FVEK file\n"
-		);
-		return FALSE;
-	}
-	rs = dis_read(file_fd, fvek_keys,  sizeof(fvek_keys));
-	if(rs != sizeof(fvek_keys))
-	{
-		dis_printf(L_ERROR, "Cannot read whole FVEK keys in the FVEK file\n");
-		return FALSE;
-	}
+	// off_t expected_size = sizeof(enc_method) + sizeof(fvek_keys);
 
 
-	/* Create the FVEK datum */
-	*fvek_datum = dis_malloc(sizeof(datum_key_t) + sizeof(fvek_keys));
+	// file_fd = dis_open(cfg->fvek_file, O_RDONLY);
+	// if(file_fd == -1)
+	// {
+	// 	dis_printf(L_ERROR, "Cannot open FVEK file (%s)\n", cfg->fvek_file);
+	// 	return FALSE;
+	// }
 
-	/* ... create the header */
-	datum_key = *fvek_datum;
-	datum_key->header.datum_size = sizeof(datum_key_t) + sizeof(fvek_keys);
-	datum_key->header.entry_type = 3;
-	datum_key->header.value_type = DATUMS_VALUE_KEY;
-	datum_key->header.error_status = 1;
+	// /* Check the file's size */
+	// actual_size = dis_lseek(file_fd, 0, SEEK_END);
 
-	datum_key->algo = enc_method.single;
-	datum_key->padd = 0;
+	// if(actual_size != expected_size)
+	// {
+	// 	dis_printf(
+	// 		L_ERROR,
+	// 		"Wrong FVEK file size, expected %d but has %d\n",
+	// 		expected_size,
+	// 		actual_size
+	// 	);
+	// 	return FALSE;
+	// }
 
-	/* ... copy the keys */
-	memcpy((char*) *fvek_datum + sizeof(datum_key_t), fvek_keys, sizeof(fvek_keys));
+	// /* Read everything */
+	// dis_lseek(file_fd, 0, SEEK_SET);
+	// rs = dis_read(file_fd, enc_method.multi, sizeof(enc_method));
+	// if(rs != sizeof(enc_method))
+	// {
+	// 	dis_printf(
+	// 		L_ERROR,
+	// 		"Cannot read whole encryption method in the FVEK file\n"
+	// 	);
+	// 	return FALSE;
+	// }
+	// rs = dis_read(file_fd, fvek_keys,  sizeof(fvek_keys));
+	// if(rs != sizeof(fvek_keys))
+	// {
+	// 	dis_printf(L_ERROR, "Cannot read whole FVEK keys in the FVEK file\n");
+	// 	return FALSE;
+	// }
 
 
-	return TRUE;
+	// /* Create the FVEK datum */
+	// *fvek_datum = dis_malloc(sizeof(datum_key_t) + sizeof(fvek_keys));
+
+	// /* ... create the header */
+	// datum_key = *fvek_datum;
+	// datum_key->header.datum_size = sizeof(datum_key_t) + sizeof(fvek_keys);
+	// datum_key->header.entry_type = 3;
+	// datum_key->header.value_type = DATUMS_VALUE_KEY;
+	// datum_key->header.error_status = 1;
+
+	// datum_key->algo = enc_method.single;
+	// datum_key->padd = 0;
+
+	// /* ... copy the keys */
+	// memcpy((char*) *fvek_datum + sizeof(datum_key_t), fvek_keys, sizeof(fvek_keys));
+
+
+	return FALSE;
 }

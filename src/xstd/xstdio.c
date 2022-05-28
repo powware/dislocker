@@ -35,14 +35,11 @@
 #include "dislocker/xstd/xstdio.h"
 #include "dislocker/xstd/xstdlib.h"
 
-
-
-/* Files descriptors to know where to put logs */
-static FILE* fds[DIS_LOGS_NB] = {0,};
+#include <Library/UefiBootServicesTableLib.h>
 
 
 /* Keep track of the verbosity level */
-static int verbosity = L_QUIET;
+int verbosity = L_QUIET;
 
 
 /* Levels transcription into strings */
@@ -55,65 +52,13 @@ static char* msg_tab[DIS_LOGS_NB] = {
 };
 
 
-/** Saving STDIN parameters before unbufferisation */
-static struct termios ti_save;
-static int            tty_fd = -1;
-
-
-
 /**
  * Initialize outputs for display messages
  *
  * @param v Application verbosity
  * @param file File where putting logs (stdout if NULL)
  */
-void dis_stdio_init(DIS_LOGS v, const char* file)
-{
-	verbosity = v;
-
-	FILE* log = NULL;
-	if(file)
-	{
-		log = fopen(file, LOG_MODE);
-		if(!log)
-		{
-			perror("Error opening log file (falling back to stdout)");
-			log = stdout;
-		}
-	}
-	else
-		log = stdout;
-
-
-	switch(v)
-	{
-		default:
-			verbosity = L_DEBUG;
-			// fall through
-		case L_DEBUG:
-			fds[L_DEBUG] = log;
-			// fall through
-		case L_INFO:
-			fds[L_INFO] = log;
-			// fall through
-		case L_WARNING:
-			fds[L_WARNING] = log;
-			// fall through
-		case L_ERROR:
-			fds[L_ERROR] = log;
-			// fall through
-		case L_CRITICAL:
-			fds[L_CRITICAL] = log;
-			break;
-		case L_QUIET:
-			if (log != stdout)
-				fclose(log);
-			break;
-	}
-
-	dis_printf(L_DEBUG, "Verbosity level to %s (%d) into '%s'\n",
-	        msg_tab[verbosity], verbosity, file == NULL ? "stdout" : file);
-}
+void dis_stdio_init(DIS_LOGS, const char*) {}
 
 
 /**
@@ -123,48 +68,20 @@ void dis_stdio_init(DIS_LOGS v, const char* file)
  */
 int get_input_fd()
 {
-	if(tty_fd > -1)
-		return tty_fd;
-
-	struct termios ti;
-
-	if ((tty_fd = open("/dev/tty", O_RDONLY | O_NONBLOCK)) < 0)
-		return -1;
-
-	tcgetattr(tty_fd, &ti);
-	ti_save = ti;
-	ti.c_lflag    &= (typeof(tcflag_t)) ~(ICANON | ECHO);
-	ti.c_cc[VMIN]  = 1;
-	ti.c_cc[VTIME] = 0;
-	tcsetattr(tty_fd, TCSANOW, &ti);
-
-	return tty_fd;
+	return -1;
 }
 
 
 /**
  * Close the unbuffered stdin if opened
  */
-void close_input_fd()
-{
-	if(tty_fd > -1)
-	{
-		tcsetattr(tty_fd, TCSANOW, &ti_save);
-		close(tty_fd);
-	}
-}
+void close_input_fd() {}
 
 
 /**
  * Endify in/outputs
  */
-void dis_stdio_end()
-{
-	close_input_fd();
-
-	if(verbosity > L_QUIET)
-		fclose(fds[L_CRITICAL]);
-}
+void dis_stdio_end() {}
 
 
 /**
@@ -188,6 +105,7 @@ void chomp(char* string)
 		string[len - 2] = '\0';
 }
 
+void wait_for_key();
 
 /**
  * Do as printf(3) but displaying nothing if verbosity is not high enough
@@ -198,7 +116,7 @@ void chomp(char* string)
  * @param ... Cf printf(3)
  * @return The number of characters printed
  */
-int dis_printf(DIS_LOGS level, const char* format, ...)
+int EFIAPI dis_printf(DIS_LOGS level, const char* format, ...)
 {
 	int ret = -1;
 
@@ -209,17 +127,24 @@ int dis_printf(DIS_LOGS level, const char* format, ...)
 		level = L_DEBUG;
 
 
-	va_list arg;
-	va_start(arg, format);
+	VA_LIST arg;
+	VA_START(arg, format);
 
 	ret = dis_vprintf(level, format, arg);
 
-	va_end(arg);
+	VA_END(arg);
 
-	fflush(fds[level]);
+	wait_for_key();
 
 	return ret;
 }
+
+UINTN
+AsciiInternalPrint (
+  IN  CONST CHAR8                      *Format,
+  IN  EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL  *Console,
+  IN  VA_LIST                          Marker
+  );
 
 
 /**
@@ -230,7 +155,7 @@ int dis_printf(DIS_LOGS level, const char* format, ...)
  * @param format String to display (cf vprintf(3))
  * @param ap Cf vprintf(3)
  */
-int dis_vprintf(DIS_LOGS level, const char* format, va_list ap)
+int EFIAPI dis_vprintf(DIS_LOGS level, const char* format, VA_LIST ap)
 {
 	if(verbosity < level || verbosity <= L_QUIET)
 		return 0;
@@ -238,16 +163,9 @@ int dis_vprintf(DIS_LOGS level, const char* format, va_list ap)
 	if(level >= DIS_LOGS_NB)
 		level = L_DEBUG;
 
-	if(!fds[level])
-		return 0;
 
-
-	time_t current_time = time(NULL);
-	char* time2string = ctime(&current_time);
-
-	chomp(time2string);
-
-	fprintf(fds[level], "%s [%s] ", time2string, msg_tab[level]);
-	return vfprintf(fds[level], format, ap);
+	AsciiPrint(msg_tab[level]);
+	AsciiPrint(": ");
+	AsciiInternalPrint(format, gST->ConOut, ap);
+	return 0;
 }
-

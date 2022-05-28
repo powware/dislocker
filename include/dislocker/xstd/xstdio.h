@@ -27,6 +27,8 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#include <Library/UefiLib.h>
+
 
 /* Mode in which the log file is opened */
 #define LOG_MODE "a"
@@ -61,8 +63,8 @@ void close_input_fd();
 
 void chomp(char* string);
 
-int dis_printf(DIS_LOGS level, const char* format, ...);
-int dis_vprintf(DIS_LOGS level, const char* format, va_list ap);
+int EFIAPI dis_printf(DIS_LOGS level, const char* format, ...);
+int EFIAPI dis_vprintf(DIS_LOGS level, const char* format, VA_LIST ap);
 
 void dis_perror(char* append);
 

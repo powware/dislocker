@@ -50,33 +50,33 @@ const guid_t EOW_INFORMATION_OFFSET_GUID = {
  */
 void format_guid(uint8_t *raw_guid, char* formated_guid)
 {
-	int i, j;
+	// int i, j;
 
-	memset(formated_guid, 0, 37);
+	// memset(formated_guid, 0, 37);
 
-	for(i = 3, j = 0; i >= 0; i--, j += 2)
-		sprintf(&formated_guid[j], "%.2X", raw_guid[i]);
-	// 4*2 = 8
+	// for(i = 3, j = 0; i >= 0; i--, j += 2)
+	// 	sprintf(&formated_guid[j], "%.2X", raw_guid[i]);
+	// // 4*2 = 8
 
-	sprintf(&formated_guid[j], "-"); j++;
-	for(i = 5; i > 3; i--, j += 2)
-		sprintf(&formated_guid[j], "%.2X", raw_guid[i]);
-	// 13
+	// sprintf(&formated_guid[j], "-"); j++;
+	// for(i = 5; i > 3; i--, j += 2)
+	// 	sprintf(&formated_guid[j], "%.2X", raw_guid[i]);
+	// // 13
 
-	sprintf(&formated_guid[j], "-"); j++;
-	for(i = 7; i > 5; i--, j += 2)
-		sprintf(&formated_guid[j], "%.2X", raw_guid[i]);
-	// 18
+	// sprintf(&formated_guid[j], "-"); j++;
+	// for(i = 7; i > 5; i--, j += 2)
+	// 	sprintf(&formated_guid[j], "%.2X", raw_guid[i]);
+	// // 18
 
-	sprintf(&formated_guid[j], "-"); j++;
-	for(i = 8; i < 10; i++, j += 2)
-		sprintf(&formated_guid[j], "%.2X", raw_guid[i]);
-	// 23
+	// sprintf(&formated_guid[j], "-"); j++;
+	// for(i = 8; i < 10; i++, j += 2)
+	// 	sprintf(&formated_guid[j], "%.2X", raw_guid[i]);
+	// // 23
 
-	sprintf(&formated_guid[j], "-"); j++;
-	for(i = 10; i < 16; i++, j += 2)
-		sprintf(&formated_guid[j], "%.2X", raw_guid[i]);
-	// 36... + 1 = 37
+	// sprintf(&formated_guid[j], "-"); j++;
+	// for(i = 10; i < 16; i++, j += 2)
+	// 	sprintf(&formated_guid[j], "%.2X", raw_guid[i]);
+	// // 36... + 1 = 37
 }
 
 

@@ -30,6 +30,12 @@
 #include "dislocker/return_values.h"
 #include "dislocker/common.h"
 
+#include "hook_data.h"
+
+extern int verbosity;
+
+off_t lseek_offset = 0;
+
 /**
  * Here are wrappers for low-level and common used functions
  * These check the return value and print debug info if needed
@@ -48,38 +54,9 @@
 #define DIS_XOPEN_FAIL_LEN sizeof(DIS_XOPEN_FAIL_STR)
 int dis_open(const char* file, int flags)
 {
-	int fd = -1;
+	int fd = GetHookDataIndex((EFI_BLOCK_IO_PROTOCOL *)file);
 
-	dis_printf(L_DEBUG, "Trying to open '%s'...\n", file);
-
-	if((fd = open(file, flags)) < 0)
-	{
-		char err_string[DIS_XOPEN_FAIL_LEN + DIS_XOPEN_ARBITRARY_VALUE + 4] = {0,};
-		char file_truncated[DIS_XOPEN_ARBITRARY_VALUE] = {0,};
-
-		dis_errno = errno;
-
-		snprintf(file_truncated, DIS_XOPEN_ARBITRARY_VALUE, "%s", file);
-
-		if(DIS_XOPEN_ARBITRARY_VALUE < strlen(file))
-		{
-			file_truncated[DIS_XOPEN_ARBITRARY_VALUE-4] = '.';
-			file_truncated[DIS_XOPEN_ARBITRARY_VALUE-3] = '.';
-			file_truncated[DIS_XOPEN_ARBITRARY_VALUE-2] = '.';
-		}
-
-		snprintf(
-			err_string,
-			DIS_XOPEN_FAIL_LEN + DIS_XOPEN_ARBITRARY_VALUE + 4,
-			DIS_XOPEN_FAIL_STR " '%s'",
-			file_truncated
-		);
-
-		dis_printf(L_ERROR, "%s: %s\n", err_string, strerror(dis_errno));
-		return -1;
-	}
-
-	dis_printf(L_DEBUG, "Opened (fd #%d).\n", fd);
+	lseek_offset = 0;
 
 	return fd;
 }
@@ -95,19 +72,8 @@ int dis_open(const char* file, int flags)
 #define DIS_XCLOSE_FAIL_LEN sizeof(DIS_XCLOSE_FAIL_STR)
 int dis_close(int fd)
 {
-	int res = -1;
-
-	dis_printf(L_DEBUG, "Trying to close fd #%d...\n", fd);
-
-	if((res = close(fd)) < 0)
-	{
-		dis_errno = errno;
-		dis_printf(L_ERROR, DIS_XCLOSE_FAIL_STR " #%d: %s\n", fd, strerror(errno));
-	}
-
-	return res;
+	return 0;
 }
-
 
 /**
  * read syscall wrapper
@@ -125,16 +91,15 @@ ssize_t dis_read(int fd, void* buf, size_t count)
 
 	dis_printf(L_DEBUG, "Reading %# " F_SIZE_T " bytes from #%d into %p\n", count, fd, buf);
 
-#ifdef __FREEBSD
-	/*
-	 * FreeBSD's devices are character devices which are to be accessed one
-	 * block at a time. Exactly what one block is remains a mystery atm, so we
-	 * assume it's a sector, and that a sector is 512-bytes long.
-	 * So we count the number of sectors the requested read is on, read them all
-	 * and copy to the user only the requested data.
-	 */
-	uint16_t sector_size = 512;
-	off_t offset = lseek(fd, 0, SEEK_CUR);
+	HookData* hook = GetHookDataFromIndex(fd);
+	if(!hook)
+	{
+		Print(L"GetHookDataFromIndex failed.\n");
+		exit(1);
+	}
+
+	uint16_t sector_size =  hook->protocol->Media->BlockSize;
+	off_t offset = lseek_offset;
 	unsigned int sector_to_add = 0;
 	off_t new_offset = -1;
 	size_t old_count = count;
@@ -145,45 +110,33 @@ ssize_t dis_read(int fd, void* buf, size_t count)
 	if(((offset + (off_t)count) % sector_size) != 0)
 		sector_to_add += 1;
 
-	new_offset = (offset / sector_size) * sector_size;
+	new_offset = (offset / sector_size);
 	count = ((count / sector_size) + sector_to_add) * sector_size;
-
-	if(lseek(fd, new_offset, SEEK_SET) != new_offset)
-	{
-		dis_printf(
-			L_ERROR,
-			"Cannot lseek(2) to boundary %#" F_OFF_T "\n",
-			new_offset
-		);
-		errno = EIO;
-		return -1;
-	}
 
 	buf = dis_malloc(count * sizeof(char));
 	if(buf == NULL)
 	{
 		dis_printf(
 			L_ERROR,
-			"Cannot malloc %" F_SIZE_T " bytes\n",
+			"Cannot malloc %lu bytes\n",
 			count * sizeof(char)
 		);
 		errno = EIO;
 		return -1;
 	}
-#endif
 
-	if((res = read(fd, buf, count)) < 0)
+	EFI_STATUS status = hook->original_read_blocks(hook->protocol, hook->protocol->Media->MediaId, new_offset, count, buf);
+	if(EFI_ERROR(status))
 	{
-		dis_errno = errno;
-		dis_printf(L_ERROR, DIS_XREAD_FAIL_STR " #%d: %s\n", fd, strerror(errno));
+		Print(L"ReadBlocks failed.\n");
+		return -1;
 	}
 
-#ifdef __FREEBSD
 	/* What is remaining is just to copy actual data */
-	memcpy(old_buf, (char*) buf + (offset - new_offset), old_count);
+	memcpy(old_buf, (char*) buf + (offset - new_offset * sector_size), old_count);
 	dis_free(buf);
 
-	if(lseek(fd, offset + (off_t)old_count, SEEK_SET) == -1)
+	if(dis_lseek(fd, offset + (off_t)old_count, SEEK_SET) == -1)
 	{
 		dis_printf(
 			L_ERROR,
@@ -196,11 +149,9 @@ ssize_t dis_read(int fd, void* buf, size_t count)
 
 	/* Fake the return value */
 	res = (ssize_t) old_count;
-#endif
 
 	return res;
 }
-
 
 /**
  * write syscall wrapper
@@ -216,13 +167,13 @@ ssize_t dis_write(int fd, void* buf, size_t count)
 {
 	ssize_t res = -1;
 
-	dis_printf(L_DEBUG, "Writing %#" F_SIZE_T " bytes to #%d from %p\n", count, fd, buf);
+	dis_printf(L_DEBUG, "Writing %lu" F_SIZE_T " bytes to #%d from %p\n", count, fd, buf);
 
-	if((res = write(fd, buf, count)) < 0)
-	{
-		dis_errno = errno;
-		dis_printf(L_ERROR, DIS_XWRITE_FAIL_STR " #%d: %s\n", fd, strerror(errno));
-	}
+	// if((res = write(fd, buf, count)) < 0)
+	// {
+	// 	dis_errno = errno;
+	// 	dis_printf(L_ERROR, DIS_XWRITE_FAIL_STR " #%d: %s\n", fd, strerror(errno));
+	// }
 
 	return res;
 }
@@ -240,19 +191,12 @@ ssize_t dis_write(int fd, void* buf, size_t count)
 #define DIS_XSEEK_FAIL_LEN sizeof(DIS_XSEEK_FAIL_STR)
 off_t dis_lseek(int fd, off_t offset, int whence)
 {
-	off_t res = -1;
+	dis_printf(L_DEBUG, "Positioning %d at offset %lld from %d\n", fd, offset, whence);
 
-	dis_printf(L_DEBUG, "Positioning #%d at offset %lld from %d\n", fd, offset, whence);
+	lseek_offset = offset;
 
-	if((res = lseek(fd, offset, whence)) < 0)
-	{
-		dis_errno = errno;
-		dis_printf(L_ERROR, DIS_XSEEK_FAIL_STR " #%d: %s\n", fd, strerror(errno));
-	}
-
-	return res;
+	return lseek_offset;
 }
-
 
 /**
  * Print data in hexa
@@ -262,6 +206,7 @@ off_t dis_lseek(int fd, off_t offset, int whence)
  */
 void hexdump(DIS_LOGS level, uint8_t* data, size_t data_len)
 {
+#ifndef UEFI_DRIVER
 	size_t i, j, max = 0;
 	size_t offset = 16;
 
@@ -277,6 +222,7 @@ void hexdump(DIS_LOGS level, uint8_t* data, size_t data_len)
 
 		dis_printf(level, "%s\n", s);
 	}
+#endif // UEFI_DRIVER
 }
 
 

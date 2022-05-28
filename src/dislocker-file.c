@@ -69,7 +69,7 @@ static int dis_open_file(const char* file, int flags, mode_t mode)
 		size_t len = DIS_FILE_OPEN_FAIL_LEN + strlen(file) + 4;
 		char* err_string = dis_malloc(len);
 
-		snprintf(err_string, len , "%s '%s'", DIS_FILE_OPEN_FAIL_STR, file);
+		// snprintf(err_string, len , "%s '%s'", DIS_FILE_OPEN_FAIL_STR, file);
 
 		perror(err_string);
 		dis_free(err_string);

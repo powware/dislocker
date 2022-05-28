@@ -33,8 +33,17 @@
 
 
 /* Convention */
-#define TRUE 1
-#define FALSE 0
+// #define TRUE 1
+// #define FALSE 0
+
+#define PROGNAME    "DislockerDxe"
+#define AUTHOR      "powware"
+#define VERSION     "1"
+#define __OS        "UEFI"
+#define __ARCH      "X64"
+
+#define __DIS_CORE_DUMPS
+#define UEFI_DRIVER
 
 
 
@@ -55,10 +64,10 @@
 #ifdef __ARCH_X86_64
 # define F_OFF_T "tx"
 #else
-# define F_OFF_T "llx"
+# define F_OFF_T ""
 #endif /* __ARCH_X86_64 */
 
-#define F_SIZE_T "zx"
+#define F_SIZE_T ""
 
 
 

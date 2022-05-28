@@ -106,7 +106,7 @@ int dis_crypt_set_fvekey(dis_crypt_t crypt, uint16_t algorithm, uint8_t* fvekey)
 			return DIS_RET_SUCCESS;
 
 		default:
-			dis_printf(L_WARNING, "Algo not supported: %#hx\n", algorithm);
+			dis_printf(L_WARNING, "Algo not supported: %lu\n", algorithm);
 			break;
 	}
 

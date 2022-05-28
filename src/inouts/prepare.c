@@ -81,7 +81,7 @@ int init_keys(bitlocker_dataset_t* dataset, datum_key_t* fvek_datum,
 	}
 
 	dis_printf(L_ERROR,
-	        "Dataset's and FVEK's algorithms not supported: %#hx and %#hx\n",
+	        "Dataset's and FVEK's algorithms not supported: %lu and %lu\n",
 	        dataset->algorithm, fvek_datum->algo);
 	memclean(fvek, size_fvek);
 

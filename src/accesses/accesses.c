@@ -41,7 +41,7 @@ int dis_get_access(dis_context_t dis_ctx)
 
 	datum_key_t* fvek_typed_datum = NULL;
 
-
+#ifndef UEFI_DRIVER
 	/*
 	 * First, get the VMK datum using either any necessary mean
 	 */
@@ -49,42 +49,43 @@ int dis_get_access(dis_context_t dis_ctx)
 	{
 		if(dis_ctx->cfg.decryption_mean & DIS_USE_CLEAR_KEY)
 		{
-			if(!get_vmk_from_clearkey(dis_ctx->metadata, &vmk_datum))
-			{
-				dis_ctx->cfg.decryption_mean &= (unsigned) ~DIS_USE_CLEAR_KEY;
-			}
-			else
-			{
-				dis_printf(L_INFO, "Used clear key decryption method\n");
-				dis_ctx->cfg.decryption_mean = DIS_USE_CLEAR_KEY;
-				break;
-			}
+			// if(!get_vmk_from_clearkey(dis_ctx->metadata, &vmk_datum))
+			// {
+			// 	dis_ctx->cfg.decryption_mean &= (unsigned) ~DIS_USE_CLEAR_KEY;
+			// }
+			// else
+			// {
+			// 	dis_printf(L_INFO, "Used clear key decryption method\n");
+			// 	dis_ctx->cfg.decryption_mean = DIS_USE_CLEAR_KEY;
+			// 	break;
+			// }
 		}
 		else if(dis_ctx->cfg.decryption_mean & DIS_USE_USER_PASSWORD)
 		{
-			if(!get_vmk_from_user_pass(dis_ctx->metadata, &dis_ctx->cfg, &vmk_datum))
-			{
-				dis_ctx->cfg.decryption_mean &= (unsigned) ~DIS_USE_USER_PASSWORD;
-			}
-			else
-			{
-				dis_printf(L_INFO, "Used user password decryption method\n");
-				dis_ctx->cfg.decryption_mean = DIS_USE_USER_PASSWORD;
+			// if(!get_vmk_from_user_pass(dis_ctx->metadata, &dis_ctx->cfg, &vmk_datum))
+			// {
+			// 	dis_ctx->cfg.decryption_mean &= (unsigned) ~DIS_USE_USER_PASSWORD;
+			// }
+			// else
+			// {
+			// 	dis_printf(L_INFO, "Used user password decryption method\n");
+			// 	dis_ctx->cfg.decryption_mean = DIS_USE_USER_PASSWORD;
 
-				/* We don't need the user password anymore */
-				if(dis_ctx->cfg.user_password)
-				{
-					memclean(
-						(char*) dis_ctx->cfg.user_password,
-						strlen((char*) dis_ctx->cfg.user_password)
-					);
-					dis_ctx->cfg.user_password = NULL;
-				}
-				break;
-			}
+			// 	/* We don't need the user password anymore */
+			// 	if(dis_ctx->cfg.user_password)
+			// 	{
+			// 		memclean(
+			// 			(char*) dis_ctx->cfg.user_password,
+			// 			strlen((char*) dis_ctx->cfg.user_password)
+			// 		);
+			// 		dis_ctx->cfg.user_password = NULL;
+			// 	}
+			// 	break;
+			// }
 		}
 		else if(dis_ctx->cfg.decryption_mean & DIS_USE_RECOVERY_PASSWORD)
 		{
+#endif // UEFI_DRIVER
 			if(!get_vmk_from_rp(dis_ctx->metadata, &dis_ctx->cfg, &vmk_datum))
 			{
 				dis_ctx->cfg.decryption_mean &= (unsigned) ~DIS_USE_RECOVERY_PASSWORD;
@@ -103,34 +104,38 @@ int dis_get_access(dis_context_t dis_ctx)
 					);
 					dis_ctx->cfg.recovery_password = NULL;
 				}
+#ifndef UEFI_DRIVER
 				break;
+#endif // UEFI_DRIVER
+
 			}
+#ifndef UEFI_DRIVER
 		}
 		else if(dis_ctx->cfg.decryption_mean & DIS_USE_BEKFILE)
 		{
-			if(!get_vmk_from_bekfile(dis_ctx->metadata, &dis_ctx->cfg, &vmk_datum))
-			{
-				dis_ctx->cfg.decryption_mean &= (unsigned) ~DIS_USE_BEKFILE;
-			}
-			else
-			{
-				dis_printf(L_INFO, "Used bek file decryption method\n");
-				dis_ctx->cfg.decryption_mean = DIS_USE_BEKFILE;
-				break;
-			}
+			// if(!get_vmk_from_bekfile(dis_ctx->metadata, &dis_ctx->cfg, &vmk_datum))
+			// {
+			// 	dis_ctx->cfg.decryption_mean &= (unsigned) ~DIS_USE_BEKFILE;
+			// }
+			// else
+			// {
+			// 	dis_printf(L_INFO, "Used bek file decryption method\n");
+			// 	dis_ctx->cfg.decryption_mean = DIS_USE_BEKFILE;
+			// 	break;
+			// }
 		}
 		else if(dis_ctx->cfg.decryption_mean & DIS_USE_FVEKFILE)
 		{
-			if(!build_fvek_from_file(&dis_ctx->cfg, &fvek_datum))
-			{
-				dis_ctx->cfg.decryption_mean &= (unsigned) ~DIS_USE_FVEKFILE;
-			}
-			else
-			{
-				dis_printf(L_INFO, "Used FVEK file decryption method\n");
-				dis_ctx->cfg.decryption_mean = DIS_USE_FVEKFILE;
-				break;
-			}
+			// if(!build_fvek_from_file(&dis_ctx->cfg, &fvek_datum))
+			// {
+			// 	dis_ctx->cfg.decryption_mean &= (unsigned) ~DIS_USE_FVEKFILE;
+			// }
+			// else
+			// {
+			// 	dis_printf(L_INFO, "Used FVEK file decryption method\n");
+			// 	dis_ctx->cfg.decryption_mean = DIS_USE_FVEKFILE;
+			// 	break;
+			// }
 		}
 		else if(dis_ctx->cfg.decryption_mean & DIS_USE_VMKFILE)
 		{
@@ -151,6 +156,7 @@ int dis_get_access(dis_context_t dis_ctx)
 			return DIS_RET_ERROR_VMK_RETRIEVAL;
 		}
 	}
+#endif // UEFI_DRIVER
 
 	if(!dis_ctx->cfg.decryption_mean)
 	{
@@ -196,7 +202,7 @@ int dis_get_access(dis_context_t dis_ctx)
 	{
 		dis_printf(
 			L_CRITICAL,
-			"Can't recognize the encryption algorithm used: %#hx. Abort\n",
+			"Can't recognize the encryption algorithm used: %lu. Abort\n",
 			fvek_typed_datum->algo
 		);
 		return DIS_RET_ERROR_CRYPTO_ALGORITHM_UNSUPPORTED;

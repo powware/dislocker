@@ -30,12 +30,7 @@
 #include "dislocker/return_values.h"
 #include "dislocker/common.h"
 
-#include "hook_data.h"
-
-extern int verbosity;
-
-off_t lseek_offset = 0;
-
+#ifndef UEFI_DRIVER
 /**
  * Here are wrappers for low-level and common used functions
  * These check the return value and print debug info if needed
@@ -167,7 +162,6 @@ ssize_t dis_read(int fd, void* buf, size_t count)
  */
 #define DIS_XWRITE_FAIL_STR "Failed to write in"
 #define DIS_XWRITE_FAIL_LEN sizeof(DIS_XWRITE_FAIL_STR)
-#ifndef UEFI_DRIVER
 ssize_t dis_write(int fd, void* buf, size_t count)
 {
 	ssize_t res = -1;
@@ -182,7 +176,6 @@ ssize_t dis_write(int fd, void* buf, size_t count)
 
 	return res;
 }
-#endif // UEFI_DRIVER
 
 
 /**
@@ -203,6 +196,7 @@ off_t dis_lseek(int fd, off_t offset, int whence)
 
 	return lseek_offset;
 }
+#endif // UEFI_DRIVER
 
 /**
  * Print data in hexa

@@ -58,22 +58,22 @@ static const char* value_type_str[] =
 
 
 
-/** Datums entry types into string */
-static const char* entry_type_str[] =
-{
-	"ENTRY TYPE UNKNOWN 1",
-	"ENTRY TYPE UNKNOWN 2",
-	"ENTRY TYPE VMK",
-	"ENTRY TYPE FVEK (FveDatasetVmkGetFvek)",
-	"ENTRY TYPE UNKNOWN",
-	"ENTRY TYPE UNKNOWN",
-	"ENTRY TYPE UNKNOWN",
-	"ENTRY TYPE UNKNOWN",
-	"ENTRY TYPE UNKNOWN",
-	"ENTRY TYPE UNKNOWN",
-	"ENTRY TYPE UNKNOWN",
-	"ENTRY TYPE FVEK (TryObtainKey)" // also from "FveSynchronizeDatasetUpdate"
-};
+// /** Datums entry types into string */
+// static const char* entry_type_str[] =
+// {
+// 	"ENTRY TYPE UNKNOWN 1",
+// 	"ENTRY TYPE UNKNOWN 2",
+// 	"ENTRY TYPE VMK",
+// 	"ENTRY TYPE FVEK (FveDatasetVmkGetFvek)",
+// 	"ENTRY TYPE UNKNOWN",
+// 	"ENTRY TYPE UNKNOWN",
+// 	"ENTRY TYPE UNKNOWN",
+// 	"ENTRY TYPE UNKNOWN",
+// 	"ENTRY TYPE UNKNOWN",
+// 	"ENTRY TYPE UNKNOWN",
+// 	"ENTRY TYPE UNKNOWN",
+// 	"ENTRY TYPE FVEK (TryObtainKey)" // also from "FveSynchronizeDatasetUpdate"
+// };
 
 
 
@@ -254,6 +254,7 @@ int get_payload_safe(void* data, void** payload, size_t* size_payload)
  */
 void print_one_datum(DIS_LOGS level, void* datum)
 {
+#ifndef UEFI_DRIVER
 	datum_header_safe_t* header = (datum_header_safe_t*) datum;
 	print_header(level, header);
 
@@ -261,6 +262,7 @@ void print_one_datum(DIS_LOGS level, void* datum)
 
 	if (value_type < NB_DATUMS_VALUE_TYPES)
 		print_datum_tab[value_type](level, datum);
+#endif // UEFI_DRIVER
 }
 
 
@@ -272,6 +274,7 @@ void print_one_datum(DIS_LOGS level, void* datum)
  */
 void print_header(DIS_LOGS level, datum_header_safe_t* header)
 {
+#ifndef UEFI_DRIVER
 	dis_printf(level, "Total datum size: 0x%1$04hx (%1$hd) bytes\n", header->datum_size);
 
 	dis_printf(level, "Datum entry type: %hu\n", header->entry_type);
@@ -291,6 +294,7 @@ void print_header(DIS_LOGS level, datum_header_safe_t* header)
 	}
 
 	dis_printf(level, "Status: %#x\n", header->error_status);
+#endif // UEFI_DRIVER
 }
 
 
@@ -302,11 +306,13 @@ void print_header(DIS_LOGS level, datum_header_safe_t* header)
  */
 void print_datum_generic(DIS_LOGS level, void* vdatum)
 {
+#ifndef UEFI_DRIVER
 	datum_generic_type_t* datum = (datum_generic_type_t*) vdatum;
 
 	dis_printf(level, "Generic datum:\n");
 	hexdump(level, (void*)((char*)datum + sizeof(datum_generic_type_t)),
 			datum->header.datum_size - sizeof(datum_generic_type_t));
+#endif // UEFI_DRIVER
 }
 
 
@@ -318,12 +324,15 @@ void print_datum_generic(DIS_LOGS level, void* vdatum)
  */
 void print_datum_erased(DIS_LOGS level, void* vdatum)
 {
+#ifndef UEFI_DRIVER
 	dis_printf(level, "This datum is of ERASED type and should thus be nullified");
 	hexdump(level, vdatum, sizeof(datum_erased_t));
+#endif // UEFI_DRIVER
 }
 
 void print_datum_key(DIS_LOGS level, void* vdatum)
 {
+#ifndef UEFI_DRIVER
 	datum_key_t* datum = (datum_key_t*) vdatum;
 	char* cipher_str = cipherstr((cipher_t) datum->algo);
 
@@ -338,10 +347,12 @@ void print_datum_key(DIS_LOGS level, void* vdatum)
 	);
 
 	dis_free(cipher_str);
+#endif // UEFI_DRIVER
 }
 
 void print_datum_unicode(DIS_LOGS level, void* vdatum)
 {
+#ifndef UEFI_DRIVER
 	datum_unicode_t* datum = (datum_unicode_t*) vdatum;
 
 	size_t utf16_length = (datum->header.datum_size - sizeof(datum_unicode_t));
@@ -362,10 +373,12 @@ void print_datum_unicode(DIS_LOGS level, void* vdatum)
 	dis_printf(level, "UTF-16 string: '%ls'\n", wchar_s);
 
 	dis_free(wchar_s);
+#endif // UEFI_DRIVER
 }
 
 void print_datum_stretch_key(DIS_LOGS level, void* vdatum)
 {
+#ifndef UEFI_DRIVER
 	datum_stretch_key_t* datum = (datum_stretch_key_t*) vdatum;
 
 	dis_printf(level, "Unkown: \n");
@@ -378,10 +391,12 @@ void print_datum_stretch_key(DIS_LOGS level, void* vdatum)
 	dis_printf(level, "   ------ Nested datum ------\n");
 	print_one_datum(level, (char*) datum + sizeof(datum_stretch_key_t));
 	dis_printf(level, "   ---------------------------\n");
+#endif // UEFI_DRIVER
 }
 
 void print_datum_use_key(DIS_LOGS level, void* vdatum)
 {
+#ifndef UEFI_DRIVER
 	datum_use_key_t* datum = (datum_use_key_t*) vdatum;
 
 	dis_printf(level, "Algo: %#hx\n", datum->algo);
@@ -392,10 +407,12 @@ void print_datum_use_key(DIS_LOGS level, void* vdatum)
 	dis_printf(level, "   ------ Nested datum ------\n");
 	print_one_datum(level, (char*) datum + sizeof(datum_use_key_t));
 	dis_printf(level, "   ---------------------------\n");
+#endif // UEFI_DRIVER
 }
 
 void print_datum_aes_ccm(DIS_LOGS level, void* vdatum)
 {
+#ifndef UEFI_DRIVER
 	datum_aes_ccm_t* datum = (datum_aes_ccm_t*) vdatum;
 
 	dis_printf(level, "Nonce: \n");
@@ -408,10 +425,12 @@ void print_datum_aes_ccm(DIS_LOGS level, void* vdatum)
 		(void*) ((char*) datum + sizeof(datum_aes_ccm_t)),
 		datum->header.datum_size - sizeof(datum_aes_ccm_t)
 	);
+#endif // UEFI_DRIVER
 }
 
 void print_datum_tpmenc(DIS_LOGS level, void* vdatum)
 {
+#ifndef UEFI_DRIVER
 	datum_tpm_enc_t* datum = (datum_tpm_enc_t*) vdatum;
 
 	dis_printf(level, "Unknown: %#x\n", datum->unknown);
@@ -421,10 +440,12 @@ void print_datum_tpmenc(DIS_LOGS level, void* vdatum)
 		(void*) ((char*) datum + sizeof(datum_tpm_enc_t)),
 		datum->header.datum_size - sizeof(datum_tpm_enc_t)
 	);
+#endif // UEFI_DRIVER
 }
 
 void print_datum_vmk(DIS_LOGS level, void* vdatum)
 {
+#ifndef UEFI_DRIVER
 	datum_vmk_t* datum = (datum_vmk_t*) vdatum;
 	char extkey_id[37];
 	int computed_size = 0;
@@ -453,6 +474,7 @@ void print_datum_vmk(DIS_LOGS level, void* vdatum)
 		dis_printf(level, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
 	}
 	dis_printf(level, "   ------------------------------\n");
+#endif // UEFI_DRIVER
 }
 
 void print_datum_external(DIS_LOGS level, void* vdatum)

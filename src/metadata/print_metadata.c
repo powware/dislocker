@@ -49,6 +49,7 @@ static const char* states_str[] =
  */
 void print_volume_header(DIS_LOGS level, dis_metadata_t dis_meta)
 {
+#ifndef UEFI_DRIVER
 	if(!dis_meta)
 		return;
 
@@ -83,6 +84,7 @@ void print_volume_header(DIS_LOGS level, dis_metadata_t dis_meta)
 
 	dis_printf(level, "  Boot Partition Identifier: '0x%04hx'\n", volume_header->boot_partition_identifier);
 	dis_printf(level, "========================================\n");
+#endif // UEFI_DRIVER
 }
 
 
@@ -145,6 +147,7 @@ void print_information(DIS_LOGS level, dis_metadata_t dis_meta)
  */
 void print_dataset(DIS_LOGS level, dis_metadata_t dis_meta)
 {
+#ifndef UEFI_DRIVER
 	if(!dis_meta)
 		return;
 
@@ -172,6 +175,7 @@ void print_dataset(DIS_LOGS level, dis_metadata_t dis_meta)
 
 	dis_free(cipher);
 	free(date);
+#endif // UEFI_DRIVER
 }
 
 

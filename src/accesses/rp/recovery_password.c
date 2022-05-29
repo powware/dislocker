@@ -383,11 +383,13 @@ int intermediate_key(const uint8_t *recovery_password,
 	iresult = iresult_save;
 
 	/* Just print it */
+#ifndef UEFI_DRIVER
 	char s[NB_RP_BLOCS*2 * 5 + 1] = {0,};
 	for (loop = 0; loop < NB_RP_BLOCS*2; ++loop)
 		snprintf(&s[loop*5], 6, "0x%02hhx ", iresult[loop]);
 
 	dis_printf(L_DEBUG, "Distilled password: '%s\b'\n", s);
+#endif // UEFI_DRIVER
 
 	stretch_recovery_key(iresult, salt, result_key);
 
@@ -406,6 +408,7 @@ int intermediate_key(const uint8_t *recovery_password,
  */
 int prompt_rp(uint8_t** rp)
 {
+#ifndef UEFI_DRIVER
 	// Check the parameter
 	if(!rp)
 		return FALSE;
@@ -569,6 +572,7 @@ int prompt_rp(uint8_t** rp)
 	}
 
 	close_input_fd();
+#endif // UEFI_DRIVER
 	return FALSE;
 }
 

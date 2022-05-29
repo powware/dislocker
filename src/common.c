@@ -30,6 +30,7 @@
 #include "dislocker/return_values.h"
 #include "dislocker/common.h"
 
+#ifndef UEFI_DRIVER
 /**
  * Here are wrappers for low-level and common used functions
  * These check the return value and print debug info if needed
@@ -252,6 +253,7 @@ off_t dis_lseek(int fd, off_t offset, int whence)
 
 	return res;
 }
+#endif // UEFI_DRIVER
 
 
 /**
@@ -262,6 +264,7 @@ off_t dis_lseek(int fd, off_t offset, int whence)
  */
 void hexdump(DIS_LOGS level, uint8_t* data, size_t data_len)
 {
+#ifndef UEFI_DRIVER
 	size_t i, j, max = 0;
 	size_t offset = 16;
 
@@ -277,6 +280,7 @@ void hexdump(DIS_LOGS level, uint8_t* data, size_t data_len)
 
 		dis_printf(level, "%s\n", s);
 	}
+#endif // UEFI_DRIVER
 }
 
 

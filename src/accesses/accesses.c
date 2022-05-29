@@ -41,7 +41,7 @@ int dis_get_access(dis_context_t dis_ctx)
 
 	datum_key_t* fvek_typed_datum = NULL;
 
-
+#ifndef UEFI_DRIVER
 	/*
 	 * First, get the VMK datum using either any necessary mean
 	 */
@@ -85,6 +85,7 @@ int dis_get_access(dis_context_t dis_ctx)
 		}
 		else if(dis_ctx->cfg.decryption_mean & DIS_USE_RECOVERY_PASSWORD)
 		{
+#endif // UEFI_DRIVER
 			if(!get_vmk_from_rp(dis_ctx->metadata, &dis_ctx->cfg, &vmk_datum))
 			{
 				dis_ctx->cfg.decryption_mean &= (unsigned) ~DIS_USE_RECOVERY_PASSWORD;
@@ -103,8 +104,12 @@ int dis_get_access(dis_context_t dis_ctx)
 					);
 					dis_ctx->cfg.recovery_password = NULL;
 				}
+#ifndef UEFI_DRIVER
 				break;
+#endif // UEFI_DRIVER
+
 			}
+#ifndef UEFI_DRIVER
 		}
 		else if(dis_ctx->cfg.decryption_mean & DIS_USE_BEKFILE)
 		{
@@ -151,6 +156,7 @@ int dis_get_access(dis_context_t dis_ctx)
 			return DIS_RET_ERROR_VMK_RETRIEVAL;
 		}
 	}
+#endif // UEFI_DRIVER
 
 	if(!dis_ctx->cfg.decryption_mean)
 	{

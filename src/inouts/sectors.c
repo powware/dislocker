@@ -113,7 +113,7 @@ int read_decrypt_sectors(
 	size_t   nb_loop = 0;
 	size_t   size    = nb_read_sector * sector_size;
 	uint8_t* input   = malloc(size);
-	off_t    off     = sector_start + io_data->part_off;
+	off_t    off     = sector_start;// + io_data->part_off;
 
 	memset(input , 0, size);
 	memset(output, 0, size);

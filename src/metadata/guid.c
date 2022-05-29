@@ -50,6 +50,7 @@ const guid_t EOW_INFORMATION_OFFSET_GUID = {
  */
 void format_guid(uint8_t *raw_guid, char* formated_guid)
 {
+#ifndef UEFI_DRIVER
 	int i, j;
 
 	memset(formated_guid, 0, 37);
@@ -77,6 +78,7 @@ void format_guid(uint8_t *raw_guid, char* formated_guid)
 	for(i = 10; i < 16; i++, j += 2)
 		sprintf(&formated_guid[j], "%.2X", raw_guid[i]);
 	// 36... + 1 = 37
+#endif // UEFI_DRIVER
 }
 
 

@@ -299,6 +299,7 @@ int get_vmk_datum_from_range(dis_metadata_t dis_meta, uint16_t min_range,
  * @param vmk_datum The VMK datum
  * @return TRUE if result can be trusted, FALSE otherwise
  */
+#ifndef UEFI_DRIVER
 int get_vmk_from_file(dis_config_t* cfg, void** vmk_datum)
 {
 	if(!cfg)
@@ -363,3 +364,4 @@ int get_vmk_from_file(dis_config_t* cfg, void** vmk_datum)
 
 	return TRUE;
 }
+#endif // UEFI_DRIVER

@@ -736,11 +736,13 @@ void dis_free_args(dis_context_t dis_ctx)
 	if(cfg->fvek_file)
 		memclean(cfg->fvek_file, strlen(cfg->fvek_file) + sizeof(char));
 
+#ifndef UEFI_DRIVER
 	if(cfg->vmk_file)
 		memclean(cfg->vmk_file, strlen(cfg->vmk_file) + sizeof(char));
 
 	if(cfg->volume_path)
 		dis_free(cfg->volume_path);
+#endif // UEFI_DRIVER
 
 	if(cfg->log_file)
 		dis_free(cfg->log_file);

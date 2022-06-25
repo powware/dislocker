@@ -36,17 +36,6 @@
 // #define TRUE 1
 // #define FALSE 0
 
-#define PROGNAME    "DislockerDxe"
-#define AUTHOR      "powware"
-#define VERSION     "1"
-#define __OS        "UEFI"
-#define __ARCH      "X64"
-
-#define __DIS_CORE_DUMPS
-#define UEFI_DRIVER
-
-
-
 /* Signatures of volumes */
 #define BITLOCKER_SIGNATURE      "-FVE-FS-"
 #define BITLOCKER_SIGNATURE_SIZE strlen(BITLOCKER_SIGNATURE)
